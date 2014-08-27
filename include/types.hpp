@@ -14,7 +14,7 @@ namespace meta
 	{
 		namespace _priv
 		{
-			template <os::Type type>
+			template <os::Type _type>
 			struct socket
 			{
 				typedef int 	type;
