@@ -16,23 +16,16 @@ namespace meta
 		{
 			template <os::Type type>
 			struct socket
-			{};
-			template <>
-			struct socket<os::Type::Unix> {
+			{
 				typedef int 	type;
 			};
 			#ifdef META_WINDOWS
 			template <>
-			struct socket<os::Type::Windows> {
+			struct socket<os::Type::Windows>
+			{
 				typedef SOCKET 	type;
 			};
 			#endif
-			template <>
-			struct socket<os::Type::MacOSX> : public socket<os::Type::Unix> {};
-			template <>
-			struct socket<os::Type::FreeBSD> : public socket<os::Type::Unix> {};
-			template <>
-			struct socket<os::Type::Linux> : public socket<os::Type::Unix> {};
 		}
 		typedef _priv::socket<os::current>::type socket;
 	}
