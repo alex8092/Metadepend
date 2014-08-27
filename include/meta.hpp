@@ -3,5 +3,6 @@
 
 # include "os.hpp"
 # include "types.hpp"
+# include "socket.hpp"
 
 #endif
