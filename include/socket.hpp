@@ -9,6 +9,7 @@
 #	include <unistd.h>
 #	include <netdb.h>
 #	include <arpa/inet.h>
+#	include <sstream>
 # 	endif
 # include <system_error>
 
@@ -57,9 +58,24 @@ namespace meta
 					::close(sock);
 					sock = -1;
 				}
-				static inline bool connect(meta::types::socket sock, const std::string& ip, const uint16_t port) noexcept {
-					struct sockaddr_in sin { AF_INET, htons(port), inet_addr(ip.c_str()), { 0 } };
-					return (::connect(sock, (struct sockaddr*)&sin, sizeof(sin)) != -1);
+				static bool connect(meta::types::socket sock, Type sock_type, const std::string& host, const uint16_t port) noexcept {
+					struct addrinfo hints = { 0, 0, 0, 0, 0, 0, 0, 0 };
+					struct addrinfo *result, *current;
+					hints.ai_family = AF_INET;
+					hints.ai_socktype = (int)sock_type;
+					hints.ai_flags = AI_PASSIVE;
+					std::stringstream	port_str;
+					port_str << port;
+					int s = ::getaddrinfo(host.c_str(), port_str.str().c_str(), &hints, &result);
+					if (s != 0)
+						return (false);
+					for (current = result; current != nullptr; current = current->ai_next)
+					{
+						s = ::connect(sock, current->ai_addr, current->ai_addrlen);
+						if (s != -1)
+							return (true);
+					}
+					return (false);
 				}
 				static inline bool bind(meta::types::socket sock, const uint16_t port) noexcept {
 					struct sockaddr_in sin { AF_INET, htons(port), INADDR_ANY, { 0 }};
@@ -161,8 +177,8 @@ namespace meta
 			return (_priv::_init<os::current>::create(sock_type));
 		}
 
-		inline bool	connect(meta::types::socket sock, const std::string& ip, const uint16_t port = 80) noexcept {
-			return (_priv::_init<os::current>::connect(sock, ip, port));
+		inline bool	connect(meta::types::socket sock, Type sock_type, const std::string& host, const uint16_t port = 80) noexcept {
+			return (_priv::_init<os::current>::connect(sock, sock_type, host, port));
 		}
 
 		inline bool bind(meta::types::socket sock, const uint16_t port) noexcept {
