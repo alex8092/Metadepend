@@ -98,9 +98,6 @@ namespace meta
 				static inline int32_t write(meta::types::socket sock, const char *buffer, uint32_t size) noexcept {
 					return (::write(sock, buffer, size));
 				}
-				static inline bool is_valid(meta::types::socket sock) noexcept {
-					return (sock != -1);
-				}
 			};
 			#ifdef META_WINDOWS
 			template<>
@@ -157,10 +154,6 @@ namespace meta
 					#warning "meta::socket::read not implemented for your os at this time"
 					return (0);
 				}
-				static inline bool is_valid(meta::types::socket sock) noexcept {
-					#warning "meta::socket::is_valid not implemented for your os at this time"
-					return (false);
-				}
 			};
 			#endif
 		}
@@ -202,7 +195,7 @@ namespace meta
 		}
 
 		inline bool is_valid(meta::types::socket sock) noexcept {
-			return (_priv::_init<os::current>::is_valid(sock));
+			return (sock != meta::types::invalid_socket);
 		}
 
 		inline void close(meta::types::socket& sock) noexcept {
