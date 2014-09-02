@@ -17,17 +17,20 @@ namespace meta
 			template <os::Type _type>
 			struct socket
 			{
-				typedef int 	type;
+				typedef int 			type;
+				static constexpr int	novalid = -1;
 			};
 			#ifdef META_WINDOWS
 			template <>
 			struct socket<os::Type::Windows>
 			{
-				typedef SOCKET 	type;
+				typedef SOCKET 			type;
+				static constexpr SOCKET	novalid = INVALID_SOCKET;
 			};
 			#endif
 		}
 		typedef _priv::socket<os::current>::type socket;
+		constexpr socket invalid_socket = _priv::socket<os::current>::novalid;
 	}
 }
 
