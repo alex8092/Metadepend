@@ -2,8 +2,6 @@
 # define META_META_HPP
 
 # include "os.hpp"
-# include "types.hpp"
-# include "socket.hpp"
 # include "conststring.hpp"
 
 #endif
