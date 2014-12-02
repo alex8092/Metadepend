@@ -5,6 +5,6 @@ using namespace std;
 
 int	main(void)
 {
-	std::cout << meta::os::singleton()->version() << std::endl;
+	std::cout << meta::os::name << std::endl;
 	return (0);
 }
