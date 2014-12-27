@@ -1,7 +1,7 @@
 #ifndef META_META_HPP
 # define META_META_HPP
 
-# include "os.hpp"
-# include "conststring.hpp"
+# include "signal.hpp"
+# include "singleton.hpp"
 
 #endif

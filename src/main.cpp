@@ -3,8 +3,22 @@
 
 using namespace std;
 
+class test : public meta::singleton<test>
+{
+private:
+	test() {
+
+	}
+	friend class meta::singleton<test>;
+public:
+	void print() {
+		static int i = 0;
+		std::cout << i++ << std::endl;
+	}
+};
 int	main(void)
 {
-	std::cout << meta::os::name << std::endl;
+	test::instance()->print();
+	test::instance()->print();
 	return (0);
 }

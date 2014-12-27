@@ -24,3 +24,4 @@ CMakeCache.txt
 CMakeFiles/
 *.cmake
 *.swp
+Makefile
