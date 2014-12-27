@@ -3,5 +3,6 @@
 
 # include "signal.hpp"
 # include "singleton.hpp"
+# include "property.hpp"
 
 #endif
