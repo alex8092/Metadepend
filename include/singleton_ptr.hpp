@@ -6,19 +6,21 @@ namespace meta
 	template <class U>
 	class singleton_ptr
 	{
+	private:
+		U	*_ref = U::instance();
 	public:
 		inline 			singleton_ptr() noexcept {}
 		inline const U*	operator->() const {
-			return (&U::_singleton);
+			return (this->_ref);
 		}
 		inline U*		operator->() {
-			return (&U::_singleton);
+			return (this->_ref);
 		}
 		inline const U& operator*() const {
-			return (U::_singleton);
+			return (*this->_ref);
 		}
 		inline U&		operator*() {
-			return (U::_singleton);
+			return (*this->_ref);
 		}
 	};
 }

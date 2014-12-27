@@ -3,22 +3,19 @@
 
 using namespace std;
 
-class test : public meta::singleton<test>
-{
-private:
-	test() {
 
-	}
-	friend class meta::singleton<test>;
-public:
-	void print() {
-		static int i = 0;
-		std::cout << i++ << std::endl;
-	}
-};
+void	when_int(int c)
+{
+	cout << "value: " << c << endl;
+}
+
 int	main(void)
 {
-	test::instance()->print();
-	test::instance()->print();
+	meta::signal<int>	sint;
+
+	sint.connect(when_int);
+
+	sint.emit(999);
+
 	return (0);
 }
