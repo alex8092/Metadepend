@@ -4,14 +4,12 @@
 # include "signal.hpp"
 # include "traits/type_infos.hpp"
 # include "traits/type_convert.hpp"
+# include "traits/type_access.hpp"
 
 namespace meta
 {
 	namespace _private
 	{
-		template <class U, bool has_alternate>
-		class PrivateProperty;
-
 		namespace _property
 		{
 			template <class U,
@@ -27,6 +25,7 @@ namespace meta
 			struct _types<U, false, false, false, true>
 			{
 				typedef typename traits::type_infos<U>::base_type		storage_type;
+				typedef typename traits::type_infos<U>::ref_type		lvalue_type;
 				typedef typename traits::type_infos<U>::base_type		get_type;
 				typedef typename traits::type_infos<U>::base_type		set_type;
 				static constexpr bool									has_alternate_set = false;
@@ -38,6 +37,7 @@ namespace meta
 			struct _types<U, false, false, false, false>
 			{
 				typedef typename traits::type_infos<U>::base_type		storage_type;
+				typedef typename traits::type_infos<U>::ref_type		lvalue_type;
 				typedef typename traits::type_infos<U>::ref_type		get_type;
 				typedef typename traits::type_infos<U>::const_ref_type	set_type;
 				static constexpr bool									has_alternate_set = true;
@@ -49,6 +49,7 @@ namespace meta
 			struct _types<U, true, false, false, false>
 			{
 				typedef typename traits::type_infos<U>::ptr_type		storage_type;
+				typedef typename traits::type_infos<U>::ptr_ref_type	lvalue_type;
 				typedef typename traits::type_infos<U>::ptr_type		get_type;
 				typedef typename traits::type_infos<U>::ptr_type		set_type;
 				static constexpr bool									has_alternate_set = false;
@@ -59,6 +60,7 @@ namespace meta
 			struct _types<U, false, true, false, false>
 			{
 				typedef typename traits::type_infos<U>::ptr_type		storage_type;
+				typedef typename traits::type_infos<U>::ref_type		lvalue_type;
 				typedef typename traits::type_infos<U>::ref_type		get_type;
 				typedef typename traits::type_infos<U>::ref_type		set_type;
 				static constexpr bool									has_alternate_set = false;
@@ -69,18 +71,7 @@ namespace meta
 			struct _pointer_helper
 			{
 			public:
-				inline auto operator->() {
-					return (static_cast<U*>(this)->get());
-				}
-				inline auto operator->() const {
-					return (static_cast<U*>(this)->get());
-				}
-				inline auto operator*() {
-					return (*static_cast<U*>(this)->get());
-				}
-				inline auto operator*() const {
-					return (*static_cast<U*>(this)->get());
-				}
+				
 			};
 
 			template <class U>
@@ -89,67 +80,152 @@ namespace meta
 		}
 	}
 
-	template <class U, bool has_alternate = _private::_property::_types<U>::has_alternate_set>
-	class PrivateProperty : public _private::_property::_pointer_helper<PrivateProperty<U, has_alternate>>
+	template <class U>
+	class Property
 	{
-		typedef typename _private::_property::_types<U>::storage_type	storage_type;
-		typedef typename std::add_const<storage_type>::type				const_storage_type;
-		typedef typename _private::_property::_types<U>::get_type		get_type;
-		typedef typename std::add_const<get_type>::type					const_get_type;
-		typedef typename _private::_property::_types<U>::set_type		set_type;
-		typedef PrivateProperty<U, has_alternate>						base;
+		typedef typename _private::_property::_types<U>::storage_type		storage_type;
+		typedef typename _private::_property::_types<U>::lvalue_type		lvalue_type;
+		typedef typename _private::_property::_types<U>::get_type			get_type;
+		typedef typename std::add_const<get_type>::type						const_get_type;
+		typedef typename _private::_property::_types<U>::set_type			set_type;
+		typedef Property<U>													base;
+
+		typedef typename traits::type_convert<storage_type, lvalue_type> 		 	__lvalue;
+		typedef typename traits::type_convert<storage_type, get_type>				__get;
+		typedef typename traits::type_convert<set_type, storage_type>				__storage;
 
 	protected:
 		storage_type	_value;
 
 	public:
-		inline explicit PrivateProperty() = default;
-		inline 			PrivateProperty(const base& prop) : _value(prop._value) {}
-		inline 			PrivateProperty(base&& prop) : _value(std::move(prop._value)) {}
-		inline 			PrivateProperty(set_type value) : _value(traits::type_convert<set_type, storage_type>::value(value)) {};
-		
-		inline base&	operator=(set_type value)
+		inline explicit Property() = default;
+		inline 			Property(const base& prop) : _value(prop._value) {}
+		inline 			Property(base&& prop) : _value(std::move(prop._value)) {}
+
+		template <class T>
+		inline 			Property(T value) : _value(value) {};
+
+		template <class T>
+		inline base&	operator=(T value)
 		{
-			this->_value = traits::type_convert<set_type, storage_type>::value(value);
+			__lvalue::value(this->_value) = value;
+		}
+
+		inline base&	operator++()
+		{
+			++__lvalue::value(this->_value);
 			return (*this);
 		}
 
-		inline get_type				get() {
-			return (traits::type_convert<storage_type, get_type>::value(this->_value));
+		inline base&&	operator++(int)
+		{
+			base	cpy(static_cast<const base&>(*this));
+			this->operator++();
+			return (std::move(cpy));
 		}
 
-		inline const_get_type		get() const {
-			return (traits::type_convert<const_storage_type, const_get_type>::value(this->_value));
-		}
-
-		inline PrivateProperty<U>&	set(set_type value) {
-			this->_value = traits::type_convert<set_type, storage_type>::value(value);
+		inline base&	operator--()
+		{
+			--__lvalue::value(this->_value);
 			return (*this);
+		}
+
+		inline base&&	operator--(int)
+		{
+			base	cpy(static_cast<const base&>(*this));
+			this->operator--();
+			return (*this);
+		}
+
+		template <class T>
+		inline auto		operator[](T value) const
+		{
+			return (__get::value(this->_value)[value]);
+		}
+
+		template <class T>
+		inline auto		operator[](T value)
+		{
+			return (__get::value(this->_value)[value]);
+		}
+
+		template <class T>
+		inline base&	operator+=(T value)
+		{
+			__lvalue::value(this->_value) += value;
+			return (*this);
+		}
+
+		template <class T>
+		inline base&	operator-=(T value)
+		{
+			__lvalue::value(this->_value) -= value;
+			return (*this);
+		}
+
+		template <class T>
+		inline base&	operator*=(T value)
+		{
+			__lvalue::value(this->_value) *= value;
+			return (*this);
+		}
+
+		template <class T>
+		inline base&	operator/=(T value)
+		{
+			__lvalue::value(this->_value) /= value;
+			return (*this);
+		}
+
+		template <class T>
+		inline auto	operator+(T value)
+		{
+			return (std::move(Property<decltype(__get::value(this->_value) + value)>(__get::value(this->_value) + value)));
+		}
+
+		template <class T>
+		inline auto operator-(T value)
+		{
+			return (std::move(Property<decltype(__get::value(this->_value) - value)>(__get::value(this->_value) - value)));
+		}
+
+		template <class T>
+		inline auto operator*(T value)
+		{
+			return (std::move(Property<decltype(__get::value(this->_value) * value)>(__get::value(this->_value) * value)));
+		}
+
+		template <class T>
+		inline auto operator/(T value)
+		{
+			return (std::move(Property<decltype(__get::value(this->_value) / value)>(__get::value(this->_value) / value)));
+		}
+
+		inline auto operator->() {
+			return (&(*__lvalue::value(this->_value)));
+		}
+		inline auto operator->() const {
+			return (&(*__lvalue::value(this->_value)));
+		}
+		inline auto operator*() {
+			return (*__lvalue::value(this->_value));
+		}
+		inline auto operator*() const {
+			return (*__lvalue::value(this->_value));
+		}
+
+		inline operator get_type ()
+		{
+			return (__get::value(this->_value));
 		}
 	};
 
-	template <class U>
-	class PrivateProperty<U, true> : public PrivateProperty<U, false>
+	template <class U, class Validator>
+	struct RuledProperty : public Property<U>
 	{
-		typedef typename _private::_property::_types<U>::set_type			set_type;
-		typedef typename _private::_property::_types<U>::alternate_set_type	alternate_set_type;
-		typedef PrivateProperty<U, true>									base;
-
-	public:
-		inline explicit PrivateProperty() = default;
-		inline 			PrivateProperty(const PrivateProperty<U, true>& prop) = default;
-		inline 			PrivateProperty(PrivateProperty<U, true>&& prop) = default;
-		inline 			PrivateProperty(set_type value) : PrivateProperty<U, false>(value) {}
-
-		inline base&	operator=(alternate_set_type value)
-		{
-			this->_value = std::move(value);
-			return (*this);
-		}
-
-		inline base&	set(alternate_set_type value) {
-			this->_value = std::move(value);
-			return (*this);
+		template <class T>
+		RuledProperty(T data) : Property<U>(data) {
+			Validator::validate(data);
 		}
 	};
 }

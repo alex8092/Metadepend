@@ -65,6 +65,14 @@ namespace meta
 					};
 
 					template <class V>
+					struct _to<V*&>
+					{
+						static constexpr inline V*& value(U*& data) {
+							return (data);
+						}
+					};
+
+					template <class V>
 					struct _to<V&>
 					{
 						static constexpr inline V& value(U* data) {

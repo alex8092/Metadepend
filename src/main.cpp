@@ -1,45 +1,27 @@
 #include <iostream>
 #include "meta.hpp"
 #include "property.hpp"
+#include "traits/pointer_level.hpp"
+#include "rules/validator.hpp"
 
 using namespace std;
 
-class ttt
+void	test(meta::RuledProperty<int*, meta::rules::nullptr_validator> a)
 {
-private:
-	int	i = 0;
-
-public:
-	ttt() {
-		std::cout << "normal constructor" << std::endl;
-	}
-	ttt(const ttt& t)
-	{
-		std::cout << "copy constructor" << std::endl;
-	}
-	ttt(ttt&& t) {
-		std::cout << "move constructor" << std::endl;
-	}
-
-	ttt& operator=(const ttt& t) {
-		std::cout << "copy assignation" << std::endl;
-	}
-
-	ttt& operator=(ttt&& t) {
-		std::cout << "move assignation" << std::endl;
-	}
-
-	~ttt() {
-		std::cout << "normal destructor" << std::endl;
-	}
-
-	void	print() {
-		std::cout << i++ << std::endl;
-	}
-};
+	std::cout << *a + 4 << std::endl;
+}
 
 int	main(void)
 {
-	
+	int	a = 60;
+	try
+	{
+		test(&a);
+		test(&a);
+	}
+	catch (std::exception& e)
+	{
+		std::cout << e.what() << std::endl;
+	}
 	return (0);
 }

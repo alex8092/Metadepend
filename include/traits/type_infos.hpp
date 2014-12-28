@@ -29,6 +29,30 @@ namespace meta
 					static constexpr bool	is_reference = is_lvalue_reference || is_rvalue_reference;
 					static constexpr bool	is_fundamental = isfundamental;
 				};
+
+				template <class U, bool isptr, bool islref>
+				struct type_lvalue
+				{
+					typedef U&				lvalue_type;	
+				};
+
+				template <class U>
+				struct type_lvalue<U, true, false>
+				{
+					typedef U*&				lvalue_type;
+				};
+
+				template <class U>
+				struct type_lvalue<U, false, true>
+				{
+					typedef U&				lvalue_type;
+				};
+
+				template <class U>
+				struct type_lvalue<U, true, true>
+				{
+					typedef U*&				lvalue_type;
+				};
 			}
 		}
 		template <class U>
@@ -40,8 +64,13 @@ namespace meta
 			std::is_fundamental<U>::value
 		>
 		{
-			typedef typename std::remove_const<U>::type	type;
-			typedef typename std::add_const<U>::type 	const_type;
+			typedef typename std::remove_const<U>::type				type;
+			typedef typename std::add_const<U>::type 				const_type;
+			typedef typename _private::_type_infos::type_lvalue<
+				typename std::remove_pointer<typename std::remove_reference<typename std::remove_const<U>::type>::type>::type,
+				std::is_pointer<U>::value,
+				std::is_lvalue_reference<U>::value
+			>::lvalue_type											lvalue_type;
 		};
 	}
 }
